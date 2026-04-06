@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { generateDreamEmbedding } from '@/lib/embeddings';
-import { generateTarotImage } from '@/lib/huggingface';
+import { getRandomTarotCard } from '@/lib/tarotImages';
 
 interface Dream {
   id: string;
@@ -65,21 +65,15 @@ export async function POST(req: NextRequest) {
     // Convert embedding array to pgvector format
     const embeddingString = `[${embedding.join(',')}]`;
 
-    // Generate tarot card image (don't fail if this errors)
-    const tarotImageBase64 = await generateTarotImage(title, content);
-
-    if (tarotImageBase64) {
-      console.log('Tarot image generated successfully');
-    } else {
-      console.log('Tarot image generation failed, continuing without image');
-    }
+    const tarotImageUrl = getRandomTarotCard(mood);
+    console.log('Storing tarot image path:', tarotImageUrl);
 
     // Insert dream into database
     const result = await query<Dream>(
       `INSERT INTO dreams (user_id, title, content, mood, embedding, tarot_image_base64)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, user_id, title, content, mood, tarot_image_base64, created_at`,
-      [session.user.id, title, content, mood || null, embeddingString, tarotImageBase64]
+      [session.user.id, title, content, mood || null, embeddingString, tarotImageUrl]
     );
 
     const dream = result.rows[0];

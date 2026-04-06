@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface TarotCardProps {
   dreamId: string;
@@ -32,6 +31,8 @@ export default function TarotCard({
           <img
             src={tarotImageBase64}
             alt={title}
+            width={600}
+            height={900}
             className="w-full h-full object-cover"
           />
         ) : (
